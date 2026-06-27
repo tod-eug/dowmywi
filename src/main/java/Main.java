@@ -1,5 +1,6 @@
 import bot.DownloadBot;
 import exceptions.ConfigNotFoundException;
+import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -11,9 +12,12 @@ public class Main {
 
         PropertiesProvider.setup();
 
+        DefaultBotOptions botOptions = new DefaultBotOptions();
+        botOptions.setBaseUrl(PropertiesProvider.configurationProperties.get("url"));
+
         try {
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            botsApi.registerBot(new DownloadBot());
+            botsApi.registerBot(new DownloadBot(botOptions));
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }

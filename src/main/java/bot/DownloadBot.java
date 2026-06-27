@@ -3,11 +3,14 @@ package bot;
 import bot.commands.PermissionsChecker;
 import bot.commands.StartCommand;
 import db.AnalyticsApi;
+import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -23,8 +26,8 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
 
     public static List<Long> allowedUsers = Arrays.asList(388460760L, 447166967L);
 
-    public DownloadBot() {
-        super();
+    public DownloadBot(DefaultBotOptions botOptions) {
+        super(botOptions);
         register(new StartCommand());
     }
 
@@ -100,9 +103,12 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         }
 
         //Get the result and respond back
-
-        editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.SUCCESSFULLY_DOWNLOADED + filename, false, null);
-//        editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
+        if (!filename.isEmpty()) {
+            editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.SUCCESSFULLY_DOWNLOADED + filename, false, null);
+            sendDocument(update.getMessage().getChatId(), filename);
+        } else {
+            editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
+        }
     }
 
     public static String runCommand(File whereToRun, String command) throws Exception {
@@ -208,6 +214,20 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         deleteMessage.setMessageId(messageId);
         try {
             execute(deleteMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendDocument(long chatId, String filename) {
+        File file = new File(filename);
+        InputFile inputFile = new InputFile(file);
+        SendDocument document = new SendDocument();
+        document.setChatId(chatId);
+        document.setDocument(inputFile);
+        document.setCaption(file.getName());
+        try {
+            execute(document);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
