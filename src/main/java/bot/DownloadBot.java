@@ -78,27 +78,34 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         AnalyticsApi.createEvent(update.getCallbackQuery().getFrom().getId(), update.getCallbackQuery().getMessage().getMessageId().toString(), "", "", update.getCallbackQuery().getData());
     }
 
-    private void processMessage(Update update) {String url = update.getMessage().getText();
-        int msgId = sendMessageAndGetId(update.getMessage().getChatId(), ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
-        Runtime rt = Runtime.getRuntime();
+    private void processMessage(Update update) {
 
+        int msgId = sendMessageAndGetId(update.getMessage().getChatId(), ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
+
+        //Get and validate URL
+        String url = update.getMessage().getText();
+
+        //Run downloading process
         String currentPath = "";
+        String filename = "";
         try {
             currentPath = new File(".").getCanonicalPath();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         try {
-            runCommand(new File(currentPath + "/yt"), "./yt-dlp_macos \"https://www.youtube.com/watch?v=dXJbVOxwXYs&pp=0gcJCUELAYcqIYzv\" -P \"~/test\" -o \"%(id)s.%(ext)s\"  --print after_move:filepath");
+            filename = runCommand(new File(currentPath + "/yt"), "./yt-dlp_macos \"https://www.youtube.com/watch?v=dXJbVOxwXYs&pp=0gcJCUELAYcqIYzv\" -P \"~/storage\" -o \"%(id)s.%(ext)s\"  --print after_move:filepath");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.SUCCESSFULLY_DOWNLOADED, false, null);
+        //Get the result and respond back
+
+        editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.SUCCESSFULLY_DOWNLOADED + filename, false, null);
 //        editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
     }
 
-    public static void runCommand(File whereToRun, String command) throws Exception {
+    public static String runCommand(File whereToRun, String command) throws Exception {
         System.out.println("Running in: " + whereToRun);
         System.out.println("Command: " + command);
 
@@ -113,27 +120,38 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         InputStream inputStream = process.getInputStream();
         InputStream errorStream = process.getErrorStream();
 
-        printStream(inputStream);
-        printStream(errorStream);
+//        printStream(inputStream);
+//        printStream(errorStream);
 
         boolean isFinished = process.waitFor(30, TimeUnit.SECONDS);
         outputStream.flush();
         outputStream.close();
 
-        if(!isFinished) {
-            process.destroyForcibly();
-        }
-    }
-
-    private static void printStream(InputStream inputStream) throws IOException {
+        String filename = "";
         try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while((line = bufferedReader.readLine()) != null) {
                 System.out.println(line);
+                filename = line;
             }
-
         }
+
+        if(!isFinished) {
+            process.destroyForcibly();
+        }
+
+        return filename;
     }
+
+//    private static void printStream(InputStream inputStream) throws IOException {
+//        try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+//            String line;
+//            while((line = bufferedReader.readLine()) != null) {
+//                System.out.println(line);
+//            }
+//
+//        }
+//    }
 
 
     private void sendMessage(long chatId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
