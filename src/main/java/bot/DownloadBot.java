@@ -1,15 +1,33 @@
 package bot;
 
+import bot.commands.PermissionsChecker;
+import bot.commands.StartCommand;
+import db.AnalyticsApi;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import util.PropertiesProvider;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class DownloadBot extends TelegramLongPollingCommandBot {
+
+    public static List<Long> allowedUsers = Arrays.asList(388460760L, 447166967L);
+
+    public DownloadBot() {
+        super();
+        register(new StartCommand());
+    }
+
     @Override
     public String getBotUsername() {
         return PropertiesProvider.configurationProperties.get("BotName");
@@ -27,24 +45,18 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
 
     @Override
     public void processNonCommandUpdate(Update update) {
-        if (update.hasMessage()) {
-            String url = update.getMessage().getText();
-            Runtime rt = Runtime.getRuntime();
 
-            String currentPath = "";
-            try {
-                currentPath = new File(".").getCanonicalPath();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                runCommand(new File(currentPath + "/yt"), "./yt-dlp_macos \"https://www.youtube.com/watch?v=dXJbVOxwXYs&pp=0gcJCUELAYcqIYzv\" -P \"~/test\" -o \"%(id)s.%(ext)s\"  --print after_move:filepath");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+        if (update.hasCallbackQuery()) {
+            processCallbackQuery(update);
         }
 
+        if (update.hasMessage()) {
+            AnalyticsApi.createEvent(update.getMessage().getFrom().getId(), update.getMessage().getMessageId().toString(), "", update.getMessage().getText(), "");
+            if (PermissionsChecker.isAllowed(update.getMessage().getFrom().getId()))
+                processMessage(update);
+            else
+                sendMessage(update.getMessage().getChatId(), ReplyConstants.NOT_ALLOWED, false, null);
+        }
     }
 
     @Override
@@ -60,6 +72,30 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
     @Override
     public void onUpdatesReceived(List<Update> updates) {
         super.onUpdatesReceived(updates);
+    }
+
+    private void processCallbackQuery(Update update) {
+        AnalyticsApi.createEvent(update.getCallbackQuery().getFrom().getId(), update.getCallbackQuery().getMessage().getMessageId().toString(), "", "", update.getCallbackQuery().getData());
+    }
+
+    private void processMessage(Update update) {String url = update.getMessage().getText();
+        int msgId = sendMessageAndGetId(update.getMessage().getChatId(), ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
+        Runtime rt = Runtime.getRuntime();
+
+        String currentPath = "";
+        try {
+            currentPath = new File(".").getCanonicalPath();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            runCommand(new File(currentPath + "/yt"), "./yt-dlp_macos \"https://www.youtube.com/watch?v=dXJbVOxwXYs&pp=0gcJCUELAYcqIYzv\" -P \"~/test\" -o \"%(id)s.%(ext)s\"  --print after_move:filepath");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.SUCCESSFULLY_DOWNLOADED, false, null);
+//        editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
     }
 
     public static void runCommand(File whereToRun, String command) throws Exception {
@@ -96,6 +132,66 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
                 System.out.println(line);
             }
 
+        }
+    }
+
+
+    private void sendMessage(long chatId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
+        SendMessage sm = new SendMessage();
+        sm.setChatId(Long.toString(chatId));
+        sm.setText(text);
+        if (keyboard != null)
+            sm.setReplyMarkup(keyboard);
+        if (htmlParseMode)
+            sm.setParseMode(ParseMode.HTML);
+        try {
+            execute(sm);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int sendMessageAndGetId(long chatId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
+        int messageId = 0;
+        SendMessage sm = new SendMessage();
+        sm.setChatId(Long.toString(chatId));
+        sm.setText(text);
+        if (keyboard != null)
+            sm.setReplyMarkup(keyboard);
+        if (htmlParseMode)
+            sm.setParseMode(ParseMode.HTML);
+        try {
+            messageId = execute(sm).getMessageId();
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+        return messageId;
+    }
+
+    private void editMessage(long chatId, int messageId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
+        EditMessageText editMessageText = new EditMessageText();
+        editMessageText.setChatId(chatId);
+        editMessageText.setMessageId(messageId);
+        editMessageText.setText(text);
+        if (keyboard != null)
+            editMessageText.setReplyMarkup(keyboard);
+        if (htmlParseMode)
+            editMessageText.setParseMode(ParseMode.HTML);
+        try {
+            execute(editMessageText);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteMessage(long chatId, int messageId) {
+        DeleteMessage deleteMessage = new DeleteMessage();
+        deleteMessage.setChatId(Long.toString(chatId));
+        deleteMessage.setMessageId(messageId);
+        try {
+            execute(deleteMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 }
