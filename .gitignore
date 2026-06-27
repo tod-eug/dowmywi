@@ -3,6 +3,7 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 src/main/resources/bot.properties
 src/main/resources/db.properties
+yt
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
