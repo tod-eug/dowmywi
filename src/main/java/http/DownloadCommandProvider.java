@@ -10,7 +10,8 @@ public class DownloadCommandProvider {
         String videoUrl = MessageFormat.format("\"{0}\"", url);
         String destinationFolder = "-P \"~/storage\"";
         String quality = "-S \"res:480\"";
-        String fileName = "-o \"%(id)s.%(ext)s\"";
+        String fileName = "-o \"%(title)s.%(ext)s\"";
+        String cleanFileName = "--windows-filenames";
         String outputFormat = "--remux-video mp4";
         String printFilenameCommand = "--print after_move:filepath";
         //String result = MessageFormat.format("./yt-dlp_macos \"{0}\" -P \"~/storage\" -o \"%(id)s.%(ext)s\"  --print after_move:filepath", url);
@@ -26,6 +27,8 @@ public class DownloadCommandProvider {
                 .append(quality)
                 .append(space)
                 .append(fileName)
+                .append(space)
+                .append(cleanFileName)
                 .append(space)
                 .append(outputFormat)
                 .append(space)
