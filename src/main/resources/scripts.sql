@@ -17,7 +17,7 @@ CREATE TABLE public.analytics (
                                   command varchar(30) NULL,
                                   message_id varchar(30) NULL,
                                   text varchar(3000) NULL,
-                                  callback varchar(100) NULL,
+                                  callback varchar(5000) NULL,
                                   create_date timestamp NOT NULL,
                                   CONSTRAINT analytics_pkey PRIMARY KEY (id)
 );
