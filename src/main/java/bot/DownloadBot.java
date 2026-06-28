@@ -21,14 +21,13 @@ import util.PropertiesProvider;
 import java.io.*;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class DownloadBot extends TelegramLongPollingCommandBot {
 
-    public static List<Long> allowedUsers = Arrays.asList(388460760L, 447166967L);
+    public static List<Long> allowedUsers = PropertiesProvider.getAllowedUsers();
 
     public DownloadBot(DefaultBotOptions botOptions) {
         super(botOptions);

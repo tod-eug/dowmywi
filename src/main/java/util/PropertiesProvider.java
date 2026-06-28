@@ -4,9 +4,7 @@ import exceptions.ConfigNotFoundException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class PropertiesProvider {
 
@@ -15,6 +13,16 @@ public class PropertiesProvider {
     public static void setup() throws ConfigNotFoundException {
         loadConfigs("src/main/resources/bot.properties");
         loadConfigs("src/main/resources/db.properties");
+    }
+
+    public static List<Long> getAllowedUsers() {
+        List<Long> result = new ArrayList<>();
+        List<String> strings = List.of(configurationProperties.get("allowedUsers").split(","));
+
+        for (String s: strings) {
+            result.add(Long.parseLong(s));
+        }
+        return result;
     }
 
     private static void loadConfigs(String configFile) throws ConfigNotFoundException {
