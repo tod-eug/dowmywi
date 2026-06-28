@@ -3,6 +3,7 @@ package bot;
 import bot.commands.PermissionsChecker;
 import bot.commands.StartCommand;
 import db.AnalyticsApi;
+import http.DownloadCommandProvider;
 import http.UrlValidator;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
@@ -94,14 +95,14 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
             //Run downloading process
             String currentPath = "";
             String filename = "";
-            String command = MessageFormat.format("./yt-dlp_macos \"{0}\" -P \"~/storage\" -o \"%(id)s.%(ext)s\"  --print after_move:filepath", url);
+
             try {
                 currentPath = new File(".").getCanonicalPath();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             try {
-                filename = runCommand(new File(currentPath + "/yt"), command);
+                filename = runCommand(new File(currentPath + "/yt"), DownloadCommandProvider.buildDownloadCommand(url));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
