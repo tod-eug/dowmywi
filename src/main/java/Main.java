@@ -1,5 +1,6 @@
 import bot.DownloadBot;
 import exceptions.ConfigNotFoundException;
+import org.apache.http.client.config.RequestConfig;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -12,7 +13,12 @@ public class Main {
 
         PropertiesProvider.setup();
 
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setSocketTimeout(900_000)              // waiting the file uploading to the telegram for 15 min max
+                .build();
+
         DefaultBotOptions botOptions = new DefaultBotOptions();
+        botOptions.setRequestConfig(requestConfig);
         botOptions.setBaseUrl(PropertiesProvider.configurationProperties.get("url"));
 
         try {
