@@ -8,7 +8,7 @@ public class ReplyConstants {
     public static String TRYING_TO_DOWNLOAD = "Ссылка получена, скачиваю видео, пожалуйста подождите...";
     public static String SUCCESSFULLY_DOWNLOADED = "Видео успешно загружено, загружаю видео в этот чат. Оно появится через несколько мгновений.";
     public static String ERROR_OCCURRED_WHILE_DOWNLOADING = "Возникла непредвиденная ошибка.";
-    public static String LINK_IS_INCORRECT = "Полученный текст не выглядит как ссылка на youtube видео";
+    public static String LINK_IS_INCORRECT = "Полученный текст не выглядит как ссылка на youtube видео. ";
 
     public static String START_REPLY_WELCOME_EN = "Welcome! ";
     public static String NOT_ALLOWED_EN = "This bot can do nothing for you. Apologies.";

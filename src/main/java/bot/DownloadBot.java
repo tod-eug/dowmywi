@@ -115,7 +115,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
                 editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
             }
         } else {
-            sendMessage(update.getMessage().getChatId(), ReplyConstants.LINK_IS_INCORRECT, false, null);
+            sendMessage(update.getMessage().getChatId(), ReplyConstants.LINK_IS_INCORRECT + ReplyConstants.GIVE_ME_THE_LINK, false, null);
         }
     }
 
