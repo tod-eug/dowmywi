@@ -3,6 +3,7 @@ package bot;
 import bot.commands.PermissionsChecker;
 import bot.commands.StartCommand;
 import db.AnalyticsApi;
+import http.UrlValidator;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
@@ -18,6 +19,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import util.PropertiesProvider;
 
 import java.io.*;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -83,31 +85,35 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
 
     private void processMessage(Update update) {
 
-        int msgId = sendMessageAndGetId(update.getMessage().getChatId(), ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
-
         //Get and validate URL
         String url = update.getMessage().getText();
+        if (UrlValidator.isYoutubeVideo(url)) {
+            int msgId = sendMessageAndGetId(update.getMessage().getChatId(), ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
 
-        //Run downloading process
-        String currentPath = "";
-        String filename = "";
-        try {
-            currentPath = new File(".").getCanonicalPath();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            filename = runCommand(new File(currentPath + "/yt"), "./yt-dlp_macos \"https://www.youtube.com/watch?v=dXJbVOxwXYs&pp=0gcJCUELAYcqIYzv\" -P \"~/storage\" -o \"%(id)s.%(ext)s\"  --print after_move:filepath");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+            //Run downloading process
+            String currentPath = "";
+            String filename = "";
+            String command = MessageFormat.format("./yt-dlp_macos \"{0}\" -P \"~/storage\" -o \"%(id)s.%(ext)s\"  --print after_move:filepath", url);
+            try {
+                currentPath = new File(".").getCanonicalPath();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                filename = runCommand(new File(currentPath + "/yt"), command);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
-        //Get the result and respond back
-        if (!filename.isEmpty()) {
-            editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.SUCCESSFULLY_DOWNLOADED + filename, false, null);
-            sendDocument(update.getMessage().getChatId(), filename);
+            //Get the result and respond back
+            if (!filename.isEmpty()) {
+                editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.SUCCESSFULLY_DOWNLOADED, false, null);
+                sendDocument(update.getMessage().getChatId(), filename);
+            } else {
+                editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
+            }
         } else {
-            editMessage(update.getMessage().getChatId(), msgId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
+            sendMessage(update.getMessage().getChatId(), ReplyConstants.LINK_IS_INCORRECT, false, null);
         }
     }
 
@@ -148,16 +154,6 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
 
         return filename;
     }
-
-//    private static void printStream(InputStream inputStream) throws IOException {
-//        try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-//            String line;
-//            while((line = bufferedReader.readLine()) != null) {
-//                System.out.println(line);
-//            }
-//
-//        }
-//    }
 
 
     private void sendMessage(long chatId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
