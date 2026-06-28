@@ -20,7 +20,9 @@ import util.PropertiesProvider;
 
 import java.io.*;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -123,36 +125,61 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
 
         ProcessBuilder builder = new ProcessBuilder();
         builder.directory(whereToRun);
-
         builder.command("sh", "-c", command);
 
         Process process = builder.start();
 
-        OutputStream outputStream = process.getOutputStream();
-        InputStream inputStream = process.getInputStream();
-        InputStream errorStream = process.getErrorStream();
+        List<String> outputLines = Collections.synchronizedList(new ArrayList<>());
+        List<String> errorLines = Collections.synchronizedList(new ArrayList<>());
 
-//        printStream(inputStream);
-//        printStream(errorStream);
+        Thread stdoutThread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
 
-        boolean isFinished = process.waitFor(30, TimeUnit.SECONDS);
-        outputStream.flush();
-        outputStream.close();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                    outputLines.add(line);
+                }
 
-        String filename = "";
-        try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-            String line;
-            while((line = bufferedReader.readLine()) != null) {
-                System.out.println(line);
-                filename = line;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        }
+        });
 
-        if(!isFinished) {
+        Thread stderrThread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getErrorStream()))) {
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.err.println(line);
+                    errorLines.add(line);
+                }
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        stdoutThread.start();
+        stderrThread.start();
+
+        boolean isFinished = process.waitFor(300, TimeUnit.SECONDS);
+
+        if (!isFinished) {
             process.destroyForcibly();
+
+            stdoutThread.join();
+            stderrThread.join();
+            return "";
         }
 
-        return filename;
+        if (outputLines.isEmpty()) {
+            return "";
+        }
+
+        return outputLines.get(outputLines.size() - 1);
     }
 
 
