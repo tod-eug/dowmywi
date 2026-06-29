@@ -55,11 +55,14 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         }
 
         if (update.hasMessage()) {
-            AnalyticsApi.createEvent(update.getMessage().getFrom().getId(), update.getMessage().getMessageId().toString(), "", update.getMessage().getText(), "");
-            if (PermissionsChecker.isAllowed(update.getMessage().getFrom().getId()))
+            Long chatId = update.getMessage().getChatId();
+            Long userId = update.getMessage().getFrom().getId();
+            Integer messageId = update.getMessage().getMessageId();
+            AnalyticsApi.createEvent(userId, messageId.toString(), "", update.getMessage().getText(), "");
+            if (PermissionsChecker.isAllowed(userId))
                 processMessage(update);
             else
-                sendMessage(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), update.getMessage().getMessageId(), ReplyConstants.NOT_ALLOWED, false, null);
+                sendMessage(chatId, userId, messageId, ReplyConstants.NOT_ALLOWED, false, null);
         }
     }
 
@@ -83,16 +86,20 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
     }
 
     private void processMessage(Update update) {
+        Long chatId = update.getMessage().getChatId();
+        Long userId = update.getMessage().getFrom().getId();
+        Integer messageId = update.getMessage().getMessageId();
 
         //Get and validate URL
         String url = update.getMessage().getText();
         if (UrlValidator.isYoutubeVideo(url)) {
-            int msgId = sendMessageAndGetId(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), update.getMessage().getMessageId(), ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
+            int msgId = sendMessageAndGetId(chatId, userId, messageId, ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
 
             //Run downloading process
-            AnalyticsApi.createEvent(update.getMessage().getFrom().getId(), "", "bot", "", DownloadCommandProvider.buildDownloadCommand(url));
+            String command = DownloadCommandProvider.buildDownloadCommand(url);
             String currentPath = "";
             String filename = "";
+            AnalyticsApi.createEvent(userId, "", "bot", "", command);
 
             try {
                 currentPath = new File(".").getCanonicalPath();
@@ -100,20 +107,20 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
                 throw new RuntimeException(e);
             }
             try {
-                filename = runCommand(new File(currentPath + "/yt"), DownloadCommandProvider.buildDownloadCommand(url));
+                filename = runCommand(new File(currentPath + "/yt"), command);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
             //Get the result and respond back
             if (!filename.isEmpty() && filename.startsWith("/Users/srs/storage")) {
-                editMessage(update.getMessage().getChatId(), msgId, update.getMessage().getFrom().getId(), ReplyConstants.SUCCESSFULLY_DOWNLOADED, false, null);
-                sendDocument(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), update.getMessage().getMessageId(), filename);
+                editMessage(chatId, msgId, userId, ReplyConstants.SUCCESSFULLY_DOWNLOADED, false, null);
+                sendDocument(chatId, userId, messageId, filename);
             } else {
-                editMessage(update.getMessage().getChatId(), msgId, update.getMessage().getFrom().getId(), ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
+                editMessage(chatId, msgId, userId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
             }
         } else {
-            sendMessage(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), update.getMessage().getMessageId(), ReplyConstants.LINK_IS_INCORRECT + ReplyConstants.GIVE_ME_THE_LINK, false, null);
+            sendMessage(chatId, userId, messageId, ReplyConstants.LINK_IS_INCORRECT + ReplyConstants.GIVE_ME_THE_LINK, false, null);
         }
     }
 
