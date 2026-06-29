@@ -30,11 +30,13 @@ public class StartCommand implements IBotCommand {
         sm.setChatId(message.getChatId());
 
         if (PermissionsChecker.isAllowed(message.getFrom().getId())) {
-            sm.setText(ReplyConstants.START_REPLY_WELCOME + ReplyConstants.GIVE_ME_THE_LINK);
-            AnalyticsApi.createEvent(message.getFrom().getId(), "", "bot", ReplyConstants.START_REPLY_WELCOME + ReplyConstants.GIVE_ME_THE_LINK,"");
+            String text = ReplyConstants.START_REPLY_WELCOME + ReplyConstants.GIVE_ME_THE_LINK;
+            sm.setText(text);
+            AnalyticsApi.createEvent(message.getFrom().getId(), String.valueOf(message.getMessageId() +1L), "bot", text,"");
         } else {
-            sm.setText(ReplyConstants.START_REPLY_WELCOME + ReplyConstants.NOT_ALLOWED);
-            AnalyticsApi.createEvent(message.getFrom().getId(), "", "bot", ReplyConstants.START_REPLY_WELCOME + ReplyConstants.NOT_ALLOWED,"");
+            String text = ReplyConstants.START_REPLY_WELCOME + ReplyConstants.NOT_ALLOWED;
+            sm.setText(text);
+            AnalyticsApi.createEvent(message.getFrom().getId(), String.valueOf(message.getMessageId() +1L), "bot", text,"");
         }
 
         MessageProcessor.sendMsg(absSender, sm);

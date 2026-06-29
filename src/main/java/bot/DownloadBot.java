@@ -20,10 +20,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import util.PropertiesProvider;
 
 import java.io.*;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class DownloadBot extends TelegramLongPollingCommandBot {
@@ -62,7 +59,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
             if (PermissionsChecker.isAllowed(update.getMessage().getFrom().getId()))
                 processMessage(update);
             else
-                sendMessage(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), ReplyConstants.NOT_ALLOWED, false, null);
+                sendMessage(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), update.getMessage().getMessageId(), ReplyConstants.NOT_ALLOWED, false, null);
         }
     }
 
@@ -90,7 +87,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         //Get and validate URL
         String url = update.getMessage().getText();
         if (UrlValidator.isYoutubeVideo(url)) {
-            int msgId = sendMessageAndGetId(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
+            int msgId = sendMessageAndGetId(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), update.getMessage().getMessageId(), ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
 
             //Run downloading process
             AnalyticsApi.createEvent(update.getMessage().getFrom().getId(), "", "bot", "", DownloadCommandProvider.buildDownloadCommand(url));
@@ -111,12 +108,12 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
             //Get the result and respond back
             if (!filename.isEmpty() && filename.startsWith("/Users/srs/storage")) {
                 editMessage(update.getMessage().getChatId(), msgId, update.getMessage().getFrom().getId(), ReplyConstants.SUCCESSFULLY_DOWNLOADED, false, null);
-                sendDocument(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), filename);
+                sendDocument(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), update.getMessage().getMessageId(), filename);
             } else {
                 editMessage(update.getMessage().getChatId(), msgId, update.getMessage().getFrom().getId(), ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
             }
         } else {
-            sendMessage(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), ReplyConstants.LINK_IS_INCORRECT + ReplyConstants.GIVE_ME_THE_LINK, false, null);
+            sendMessage(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), update.getMessage().getMessageId(), ReplyConstants.LINK_IS_INCORRECT + ReplyConstants.GIVE_ME_THE_LINK, false, null);
         }
     }
 
@@ -184,8 +181,8 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
     }
 
 
-    private void sendMessage(long chatId, long userId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
-        AnalyticsApi.createEvent(userId, "", "bot", text, "");
+    private void sendMessage(long chatId, long userId, long previousMessageId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
+        AnalyticsApi.createEvent(userId, String.valueOf(previousMessageId + 1L), "bot", text, "");
         SendMessage sm = new SendMessage();
         sm.setChatId(Long.toString(chatId));
         sm.setText(text);
@@ -200,8 +197,8 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private int sendMessageAndGetId(long chatId, long userId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
-        AnalyticsApi.createEvent(userId, "", "bot", text, "");
+    private int sendMessageAndGetId(long chatId, long userId, long previousMessageId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
+        AnalyticsApi.createEvent(userId, String.valueOf(previousMessageId + 1L), "bot", text, "");
         int messageId = 0;
         SendMessage sm = new SendMessage();
         sm.setChatId(Long.toString(chatId));
@@ -246,8 +243,8 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private void sendDocument(long chatId, long userId, String filename) {
-        AnalyticsApi.createEvent(userId, "", "bot", filename, "");
+    private void sendDocument(long chatId, long userId, long previousMessageId, String filename) {
+        AnalyticsApi.createEvent(userId, String.valueOf(previousMessageId + 1L), "bot", filename, "");
         File file = new File(filename);
         InputFile inputFile = new InputFile(file);
         SendDocument document = new SendDocument();
