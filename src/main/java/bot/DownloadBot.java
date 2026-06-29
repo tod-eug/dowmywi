@@ -109,7 +109,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
             }
 
             //Get the result and respond back
-            if (!filename.isEmpty()) {
+            if (!filename.isEmpty() && filename.startsWith("/Users/srs/storage")) {
                 editMessage(update.getMessage().getChatId(), msgId, update.getMessage().getFrom().getId(), ReplyConstants.SUCCESSFULLY_DOWNLOADED, false, null);
                 sendDocument(update.getMessage().getChatId(), update.getMessage().getFrom().getId(), filename);
             } else {
