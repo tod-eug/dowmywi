@@ -32,11 +32,11 @@ public class StartCommand implements IBotCommand {
         if (PermissionsChecker.isAllowed(message.getFrom().getId())) {
             String text = ReplyConstants.START_REPLY_WELCOME + ReplyConstants.GIVE_ME_THE_LINK;
             sm.setText(text);
-            AnalyticsApi.createEvent(message.getFrom().getId(), String.valueOf(message.getMessageId() +1L), "bot", text,"");
+            AnalyticsApi.createEvent(message.getFrom().getId(), String.valueOf(message.getMessageId() + 1), "bot", text,"");
         } else {
             String text = ReplyConstants.START_REPLY_WELCOME + ReplyConstants.NOT_ALLOWED;
             sm.setText(text);
-            AnalyticsApi.createEvent(message.getFrom().getId(), String.valueOf(message.getMessageId() +1L), "bot", text,"");
+            AnalyticsApi.createEvent(message.getFrom().getId(), String.valueOf(message.getMessageId() + 1), "bot", text,"");
         }
 
         MessageProcessor.sendMsg(absSender, sm);

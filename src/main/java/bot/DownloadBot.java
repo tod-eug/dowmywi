@@ -62,7 +62,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
             if (PermissionsChecker.isAllowed(userId))
                 processMessage(update);
             else
-                sendMessage(chatId, userId, messageId, ReplyConstants.NOT_ALLOWED, false, null);
+                sendMessage(chatId, userId, messageId + 1, ReplyConstants.NOT_ALLOWED, false, null);
         }
     }
 
@@ -93,7 +93,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         //Get and validate URL
         String url = update.getMessage().getText();
         if (UrlValidator.isYoutubeVideo(url)) {
-            int msgId = sendMessageAndGetId(chatId, userId, messageId, ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
+            int msgId = sendMessageAndGetId(chatId, userId, messageId + 1, ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
 
             //Run downloading process
             String command = DownloadCommandProvider.buildDownloadCommand(url);
@@ -115,12 +115,12 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
             //Get the result and respond back
             if (!filename.isEmpty() && filename.startsWith("/Users/srs/storage")) {
                 editMessage(chatId, msgId, userId, ReplyConstants.SUCCESSFULLY_DOWNLOADED, false, null);
-                sendDocument(chatId, userId, messageId, filename);
+                sendDocument(chatId, userId, messageId + 2, filename);
             } else {
                 editMessage(chatId, msgId, userId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
             }
         } else {
-            sendMessage(chatId, userId, messageId, ReplyConstants.LINK_IS_INCORRECT + ReplyConstants.GIVE_ME_THE_LINK, false, null);
+            sendMessage(chatId, userId, messageId + 1, ReplyConstants.LINK_IS_INCORRECT + ReplyConstants.GIVE_ME_THE_LINK, false, null);
         }
     }
 
@@ -188,8 +188,8 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
     }
 
 
-    private void sendMessage(long chatId, long userId, long previousMessageId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
-        AnalyticsApi.createEvent(userId, String.valueOf(previousMessageId + 1L), "bot", text, "");
+    private void sendMessage(long chatId, long userId, Integer messageId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
+        AnalyticsApi.createEvent(userId, messageId.toString(), "bot", text, "");
         SendMessage sm = new SendMessage();
         sm.setChatId(Long.toString(chatId));
         sm.setText(text);
@@ -204,8 +204,8 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private int sendMessageAndGetId(long chatId, long userId, long previousMessageId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
-        AnalyticsApi.createEvent(userId, String.valueOf(previousMessageId + 1L), "bot", text, "");
+    private int sendMessageAndGetId(long chatId, long userId, Integer analyticsMessageId, String text, boolean htmlParseMode, InlineKeyboardMarkup keyboard) {
+        AnalyticsApi.createEvent(userId, analyticsMessageId.toString(), "bot", text, "");
         int messageId = 0;
         SendMessage sm = new SendMessage();
         sm.setChatId(Long.toString(chatId));
@@ -250,8 +250,8 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private void sendDocument(long chatId, long userId, long previousMessageId, String filename) {
-        AnalyticsApi.createEvent(userId, String.valueOf(previousMessageId + 1L), "bot", filename, "");
+    private void sendDocument(long chatId, long userId, Integer messageId, String filename) {
+        AnalyticsApi.createEvent(userId, messageId.toString(), "bot", filename, "");
         File file = new File(filename);
         InputFile inputFile = new InputFile(file);
         SendDocument document = new SendDocument();
