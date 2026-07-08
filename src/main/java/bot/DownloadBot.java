@@ -255,6 +255,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         File file = new File(filename);
         InputFile inputFile = new InputFile(file);
         SendDocument document = new SendDocument();
+        document.setDisableContentTypeDetection(true);
         document.setChatId(chatId);
         document.setDocument(inputFile);
         document.setCaption(file.getName());
