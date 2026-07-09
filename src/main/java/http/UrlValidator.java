@@ -14,7 +14,13 @@ public class UrlValidator {
         }
 
         try {
-            URI uri = new URI(url.trim());
+            String trimmedUrl = url.trim();
+
+            if (!trimmedUrl.matches("(?i)^[a-z][a-z0-9+.-]*://.*")) {
+                trimmedUrl = "https://" + trimmedUrl;
+            }
+
+            URI uri = new URI(trimmedUrl);
 
             String scheme = uri.getScheme();
             if (scheme == null ||
