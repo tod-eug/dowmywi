@@ -96,7 +96,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
             int msgId = sendMessageAndGetId(chatId, userId, messageId + 1, ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
 
             //Run downloading process
-            String command = DownloadCommandProvider.buildDownloadCommand(UrlValidator.cleanUrl(url));
+            String command = DownloadCommandProvider.getAudioCommand(UrlValidator.cleanUrl(url));
             String currentPath = "";
             String filename = "";
             AnalyticsApi.createEvent(userId, "", "bot", "", command);
