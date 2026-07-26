@@ -74,6 +74,14 @@ public class UrlValidator {
         }
     }
 
+    public static String cleanUrl(String url) {
+        String result = url;
+        if (url.contains("&list=")) {
+            result = url.split("&")[0];
+        }
+        return result;
+    }
+
     private static boolean isValidYoutubeVideoId(String id) {
         return id != null && YOUTUBE_VIDEO_ID.matcher(id).matches();
     }
