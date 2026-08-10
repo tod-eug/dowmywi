@@ -11,9 +11,10 @@ public class AnalyticsApi {
 
         String createdDate = new SimpleDateFormat(DatabaseHelper.createDateDefaultPattern).format(new Date());
         UUID id = UUID.randomUUID();
+        String normalizedText = text.replace("'", "");
 
         String insertQuery = String.format("insert into analytics (id, user_id, command, message_id, text, callback, create_date) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');",
-                id, userId, command, messageId, text, callback, createdDate);
+                id, userId, command, messageId, normalizedText, callback, createdDate);
 
         DatabaseHelper dbHelper = new DatabaseHelper();
         try {
