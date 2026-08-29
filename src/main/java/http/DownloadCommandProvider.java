@@ -6,9 +6,10 @@ public class DownloadCommandProvider {
 
     public static String buildDownloadYoutubeCommand(String url) {
         String space = " ";
-        String commandName = "./yt-dlp_macos";
+        String commandName = "/Users/srs/bots/dowmywi/yt/yt-dlp_macos";
         String videoUrl = MessageFormat.format("\"{0}\"", url);
         String destinationFolder = "-P \"~/storage\"";
+        String codec = "-S \"vcodec:h264,acodec:aac,ext:mp4:m4a\"";
         String quality = "-S \"res:480\"";
         String fileName = "-o \"%(title)s.%(ext)s\"";
         String cleanFileName = "--windows-filenames";
@@ -23,6 +24,8 @@ public class DownloadCommandProvider {
                 .append(videoUrl)
                 .append(space)
                 .append(destinationFolder)
+                .append(space)
+                .append(codec)
                 .append(space)
                 .append(quality)
                 .append(space)
