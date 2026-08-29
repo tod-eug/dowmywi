@@ -3,8 +3,10 @@ package bot;
 import bot.commands.PermissionsChecker;
 import bot.commands.StartCommand;
 import db.AnalyticsApi;
+import dto.Type;
 import http.DownloadCommandProvider;
 import http.UrlValidator;
+import http.YoutubeValidator;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
@@ -92,11 +94,17 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
 
         //Get and validate URL
         String url = update.getMessage().getText();
-        if (UrlValidator.isYoutubeVideo(url)) {
+        if (UrlValidator.isUrlValid(url)) {
+            Type type = UrlValidator.detectType(url);
             int msgId = sendMessageAndGetId(chatId, userId, messageId + 1, ReplyConstants.TRYING_TO_DOWNLOAD, false, null);
 
             //Run downloading process
-            String command = DownloadCommandProvider.buildDownloadCommand(UrlValidator.cleanUrl(url));
+            String command = "";
+            if (type == Type.YOUTUBE)
+                command = DownloadCommandProvider.buildDownloadYoutubeCommand(YoutubeValidator.cleanUrl(url));
+            else if (type == Type.INSTAGRAM) {
+                command = DownloadCommandProvider.buildDownloadInstagramCommand(url);
+            }
             String currentPath = "";
             String filename = "";
             AnalyticsApi.createEvent(userId, "", "bot", "", command);
