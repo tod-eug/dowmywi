@@ -6,8 +6,9 @@ public class ReplyConstants {
     public static String NOT_ALLOWED = "К сожалению этот бот ничего не может для вас сделать, извините.";
     public static String GIVE_ME_THE_LINK = "Пожалуйста отправьте мне ссылку на youtube видео одним сообщением. В сообщении должна быть только ссылка на видео, никаких дополнительных символов в сообщении быть не должно, иначе возникнет ошибка.";
     public static String TRYING_TO_DOWNLOAD = "Ссылка получена, скачиваю видео, пожалуйста подождите...";
-    public static String SUCCESSFULLY_DOWNLOADED = "Видео успешно загружено, загружаю видео в этот чат. Оно появится через несколько мгновений.";
+    public static String SUCCESSFULLY_DOWNLOADED = "Успешно загружено %s видео, загружаю видео в этот чат. Видео появится через несколько мгновений.";
     public static String ERROR_OCCURRED_WHILE_DOWNLOADING = "Возникла непредвиденная ошибка.";
+    public static String NO_VIDEO_FOUND = "Не было найдено ни одного видео.";
     public static String LINK_IS_INCORRECT = "Полученный текст не выглядит как ссылка на youtube видео. ";
 
     public static String START_REPLY_WELCOME_EN = "Welcome! ";

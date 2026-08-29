@@ -106,7 +106,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
                 command = DownloadCommandProvider.buildDownloadInstagramCommand(url);
             }
             String currentPath = "";
-            String filename = "";
+            List<String> output = new ArrayList<>();
             AnalyticsApi.createEvent(userId, "", "bot", "", command);
 
             try {
@@ -115,15 +115,28 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
                 throw new RuntimeException(e);
             }
             try {
-                filename = runCommand(new File(currentPath + "/yt"), command);
+                output = runCommand(new File(currentPath + "/yt"), command);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
-            //Get the result and respond back
-            if (!filename.isEmpty() && filename.startsWith("/Users/srs/storage")) {
-                editMessage(chatId, msgId, userId, ReplyConstants.SUCCESSFULLY_DOWNLOADED, false, null);
-                sendDocument(chatId, userId, messageId + 2, filename);
+            //Filter downloaded files and errors and respond back
+            List<String> files = new ArrayList<>();
+            if (!output.isEmpty()) {
+                for (String s: output) {
+                    if (s.startsWith("/Users/srs/storage/"))
+                        files.add(s);
+                }
+                if (!files.isEmpty()) {
+                    editMessage(chatId, msgId, userId, String.format(ReplyConstants.SUCCESSFULLY_DOWNLOADED, files.size()), false, null);
+                    for (int i = 0; i< files.size(); i++) {
+                        sendDocument(chatId, userId, messageId + i + 2, files.get(i));
+                    }
+                } else if (output.get(output.size() - 1).contains("Instagram sent an empty media response") || output.get(output.size() - 1).contains("No video")) {
+                    editMessage(chatId, msgId, userId, ReplyConstants.NO_VIDEO_FOUND, false, null);
+                } else {
+                    editMessage(chatId, msgId, userId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
+                }
             } else {
                 editMessage(chatId, msgId, userId, ReplyConstants.ERROR_OCCURRED_WHILE_DOWNLOADING, false, null);
             }
@@ -132,7 +145,7 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    public static String runCommand(File whereToRun, String command) throws Exception {
+    public static List<String> runCommand(File whereToRun, String command) throws Exception {
         System.out.println("Running in: " + whereToRun);
         System.out.println("Command: " + command);
 
@@ -185,14 +198,21 @@ public class DownloadBot extends TelegramLongPollingCommandBot {
 
             stdoutThread.join();
             stderrThread.join();
-            return "";
+            return new ArrayList<>();
         }
 
         if (outputLines.isEmpty()) {
-            return "";
+            if (!errorLines.isEmpty())
+                return errorLines;
+            return new ArrayList<>();
         }
 
-        return outputLines.get(outputLines.size() - 1);
+        List<String> result = new ArrayList<>();
+        for (String s: outputLines) {
+            if (s.startsWith("/Users/srs/storage/"))
+                result.add(s);
+        }
+        return result;
     }
 
 
